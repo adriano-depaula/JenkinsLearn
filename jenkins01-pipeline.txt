@@ -1,0 +1,144 @@
+Pipeline
+=========
+    Este capítulo cobre todos os aspectos recomendados da funcionalidade do Jenkins Pipeline, incluindo como:
+    ----------------------------------------------------------------------------------------------------------
+        - Primeiros passos com Pipeline - ensina como criar um Pipeline Jenkins (ou seja, seu pipeline) por meio de "Blue Ocean", por meio da IU de classe ou em SCM.
+        - Criar e usar um Jenkinsfile - ensina cenários de casos de uso sobre como criar e construir seu Jenkinsfile
+        - trabalhar com branches e pull request
+        - use Docker com Pipeline - aborda como Jenkins pode invocar contêineres Docker em agentes/nós (de um Jenkinsfile) para construir seus projetos de Pipeline
+        - estender Pipeline com bibliotecas compartilhadas
+        - usar diferentes ferramentas de desenvolvimento para facilitar a criação de seu Pipeline, e
+        - trabalhar com a sintaxe Pipeline - esta página é uma referência abrangente de toda a sintaxe declarativa de Pipeline.
+
+
+O que é Jenkins Pipeline?
+=========================
+    Jenkins Pipeline (ou simplesmente "Pipeline" com "P" maiúsculo) é um plug-in com suporte para implementação e integração de pipelines de entrega contínua em Jenkins.
+
+    Um pipeline de entrega contínua (CD) é uma expressão automatizada de seu processo para obter software do controle de versão direto para seus usuários e clientes. Cada alteração em seu software (comprometida no controle de origem) passa por um processo complexo para ser liberada. Esse processo envolve a construção do software de maneira confiável e repetível, bem como o progresso do software de construção (chamado de "construção") por meio de vários estágios de teste e implantação.
+
+    O Pipeline fornece um conjunto extensível de ferramentas para modelar pipelines de entrega simples a complexos "como código" por meio da sintaxe de linguagem específica de domínio (DSL) do Pipeline.
+
+    A criação de um Jenkins Pipeline é escrita em um arquivo de texto (chamado jenkinsfile) que, por sua vez, pode ser confirmado em um repositório de controle de origem do projeto.
+
+    Esta é a base do "Pipeline-as-code"; tratar o pipeline do CD como uma parte do aplicativo a ser versionada e revisada como qualquer outro código.
+
+    Criar um arquivo jenkins e confirmá-lo no controle de origem fornece uma série de benefícios imediatos:
+    -------------------------------------------------------------------------------------------------------
+        - Cria automaticamente um processo de construção de Pipeline para todas as branches e pull request.
+        - Revisão/iteração de código no pipeline (junto com o código-fonte restante).
+        - Trilha de auditoria para o Pipeline.
+        - Fonte única de verdade para o Pipeline, que pode ser visualizada e editada por vários membros do projeto.
+
+    Embora a sintaxe para definir um Pipeline, seja na IU da web ou com um jenkinsfile, é geralmente considerada a melhor prática criar o Pipeline em um jenkinsfile e fazer o check-in no controle de versão.
+
+
+Sintaxe de pipeline declarativa versus com script
+=================================================
+    Um Jenkinsfile pode ser escrito usando dois tipos de sintaxe - Declarativa e Script.
+    ------------------------------------------------------------------------------------
+        - fornece recursos sintáticos ricos sobre a sintaxe Scripted Pipeline e
+        - foi projetado para facilitar a escrita e a leitura do código do Pipeline.
+
+    Muitos dos componentes sintáticos individuais (ou "etapas") escritos em um jenkinsfile, no entanto, são comuns ao Pipeline declarativo e com script. Leia mais sobre como esses dois tipos de sintaxe diferem nos conceitos de Pipeline e na visão geral da sintaxe de Pipeline a seguir.
+
+
+Por que Pipeline?
+=================
+    Jenkins é, fundamentalmente, um mecanismo de automação que suporta vários padrões de automação. O Pipeline adiciona um conjunto poderoso de ferramentas de automação ao Jenkins, dando suporte a casos de uso que vão desde a integração contínua simples até pipelines de CD abrangentes. Ao modelar uma série de tarefas relacionadas, os usuários podem tirar proveito dos muitos recursos do Pipeline.
+
+        - Código: os pipelines são implementados no código e normalmente verificados no controle de versão, dando às equipes a capacidade de editar, revisar e iterar em seu pipeline de entrega.
+        - Durável: os pipelines podem sobreviver a reinicializações planejadas e não planejadas do controlador Jenkins.
+        - Pausável: o pipeline pode, opcionalmente, parar e aguardar a entrada ou aprovação humana antes de continuar a execução do pipeline.
+        - Versátil: os pipelines oferecem suporte a requisitos complexos de CD do mundo real, incluindo a capacidade de fazer fork/join, loop e realizar trabalho em paralelo.
+        - Extensível: o plug-in pipeline oferece suporte a extensões personalizadas para seu DSL e várias opções para integração com outros plug-ins.
+
+    Embora Jenkins sempre tenha permitido formas rudimentares de encadear trabalhos do Freestyle para realizar tarefas sequenciais, Pipeline torna esse conceito um cidadão de primeira classe em Jenkins.
+
+    Com base no valor central de extensibilidade do Jenkins, o Pipeline também é extensível tanto por usuários com Bibliotecas compartilhadas Pipeline quanto por desenvolvedores de plug-ins.
+
+    O fluxograma abaixo é um exemplo de um cenário de CD facilmente modelado Jenkins Pipeline:
+
+
+Conceitos de Pipeline
+======================
+    Os conceitos a seguir são aspectos-chave do Jenkins Pipeline, que estão intimamente ligados à sintaxe do Pipeline.
+        Pipeline
+        ---------
+            Um pipeline é um modelo definido pelo usuário de um pipeline de CD. O código de um Pipeline define todo o seu processo de construção, que normalmente inclui estágios para construir um aplicativo, testá-lo e, em seguida, entregá-lo.
+
+            Além disso, um bloco de pipeline é uma parte fundamental da sintaxe Declarative Pipeline.
+
+        Nó (NODE)
+        -----------
+            Um nó é uma máquina que faz parte do ambiente Jenkins e é capaz de executar um Pipeline.
+
+        Etapa (Stage)
+        -------------
+            Um bloco de estágio define um subconjunto conceitualmente distinto de tarefas realizadas em todo o Pipeline (por exemplo, estágios "Build", "Testing" e "Deploy"), que é usado por muitos plug-ins para visualizar ou apresentar o status/progresso do Jenkins Pipeline.
+
+        Passo (Step)
+        ------------
+            Uma única tarefa. Fundamentalmente, uma passo diz a Jenkins o que fazer em um determinado momento (ou "passo" do processo). Por exemplo, para executar o comando shell, use o passo sh 'make'. Quando um plug-in estende o Pipeline DSL, isso normalmente significa que o plug-in implementou um novo passo.
+
+
+Visão geral da sintaxe do pipeline
+==================================
+    Os seguintes esqueletos de código ilustram as diferenças fundamentais entre a sintaxe Declarative Pipeline e Scripted Pipeline
+    Esteja ciente de que os estágios e etapas (acima) são elementos comuns da sintaxe declarativa e do pipeline com script.
+
+    Fundamentos declarativos do pipeline
+    ------------------------------------
+        Na sintaxe de pipeline declarativa, o bloco de pipeline define todo o trabalho realizado em todo o Pipeline.
+
+            1. Execute este Pipeline ou qualquer uma de suas etapas, qualquer agente disponível.
+            2. Define o estágio de "Build"
+            3. Execute algumas etapas relacionadas ao estágio "Build"
+            4. Define o estágio de "Test".
+            5. Execute algumas etapas relacionadas ao estágio "Test".
+            6. Define o estágio "Deploy".
+            7. Execute algumas etapas relacionadas ao estágio "Implementar".
+
+Fundamentos do pipeline com script
+==================================
+        Na sintaxe do Pipeline com script, um ou mais blocos de nós fazem o trabalho principal em todo o Pipeline. Embora este não seja um requisito obrigatório da sintaxe do Pipeline com script, confinar o trabalho do Pipeline dentro de um bloco de nó faz duas coisas:
+
+            1. Agenda as etapas contidas no bloco para serem executadas adicionando um item à fila do Jenkins. Assim que um executor estiver livre em um nó, as etapas serão executadas.
+
+            2. Cria um espaço de trabalho (um diretório específico para aquele Pipeline em particular) onde o trabalho pode ser feito em arquivos retirados do controle de versão.
+
+                Cuidado: Dependendo da configuração do Jenkins, alguns espaços de trabalho podem não ser limpos automaticamente após um período de inatividade. Veja ingressos e discussão curtida de JENKINS-211 para mais informações.
+
+        1. Execute este Pipeline ou qualquer uma de suas etapas, em qualquer agente disponível.
+
+        2. Define o estágio de "Build". os blocos de estágio são opcionais na sintaxe de pipeline com script. No entanto, a implementação de blocos de estágio em um pipeline com script fornece uma visualização mais clara do subconjunto de tarefas/etapas de cada estágio na IU do Jenkins.
+
+        3. Execute algumas etapas relacionadas ao estágio de "Build".
+
+        4. Define o estágio de "Teste"
+
+        5. Execute algumas etapas relacionadas ao estágio "Teste".
+
+        6. Define o estágio de "Deploy"
+
+        7. Execute algumas etapas relacionadas ao estágio "Implementar".
+
+    Exemplo de Pipeline
+    --------------------
+        Aqui está um exemplo de Jenkins usando a sintaxe de pipeline declarativa - seu equivalente de sintaxe com script pode ser acessado clicando no link Toggle Scripted Pipeline abaixo:
+
+            1. pipeline é uma sintaxe específica de pipeline declarativa que define um "bloco" contendo todo o conteúdo e instruções para execução de todo o pipeline.
+
+            2. agente é uma sintaxe específica do pipeline declarativa que instrui o Jenkins a alocar um executor (em um nó) e um espaço de trabalho para todo o pipeline
+
+            3. stage é um bloco de sintaxe que descreve um estágio deste Pipeline. Leia mais sobre blocos de estágio em Sintaxe de pipeline declarativa na página Pipeline. Conforme mencionado acima, o estágio bloqueia mais informações na sintaxe do Pipeline com script.
+
+            4. step é a sintaxe específica do pipeline declarativa que descreve as etapas a serem executadas neste estágio.
+
+            5. sh é uma etapa do Pipeline (fornecida com os plug-ins Pipeline: Nodes e Process) que executa o comando shell fornecido.
+
+            6. junit é outra etapa do Pipeline (fornecida pelo plug-in JUnit) para agregar o relatório de teste.
+
+            7. O nó é uma sintaxe específica do Pipeline com script que instrui o Jenkins a executar este Pipeline (e todos os estágios contidos nele), em qualquer agente / nó disponível. Isso equivale efetivamente ao agente na sintaxe específica do pipeline declarativo.
+
+Fonte: https://www.jenkins.io/doc/book/pipeline/

@@ -1,0 +1,349 @@
+Docker é uma plataforma que executa aplicações em um ambiente isolado chamado contêiner. Aplicações como Jenkins podem ser baixadas como imagem somente leitura (ou imagens Docker), cada uma delas é executada no Docker como um contêiner.
+
+Um contêiner Docker é, na verdade, uma "instância em execução" de uma imagem Docker. Dessa perspectiva, uma imagem é armazenada permanentemente mais ou menos (ou seja, na medida em que as atualizações da imagem são publicadas), enquanto os contêineres são interrompidos temporariamente. Leia mais sobre esses conceitos nos primeiros passos da documentação do Docker.
+
+A plataforma fundamental do Docker e o design do contêiner significam que uma única imagem do Docker (para qualquer aplicativo como Jenkins) pode ser executada em qualquer sistema operacional de suporte (macOS, Linux e Windows) ou serviço de nuvem (AWS e Azure) que também está executando o Docker.
+
+Para instalar o Docker Engine, você precisa da versão de 64 bits de uma destas versões do Ubuntu:
+-------------------------------------------------------------------------------------------------
+    - Ubuntu Hirsute 21.04
+    - Ubuntu Groovy 20.10
+    - Ubuntu Focal 20.04 (LTS)
+    - Ubuntu Bionic 18.04 (LTS)
+    - Ubuntu Xenial 16.04 (LTS)
+
+Dessinstalando vesões antigas
+-----------------------------
+    As versões mais antigas do Docker eram chamadas de docker, docker.io ou docker-engine. Se estiverem instalados, desinstale-os:
+
+         $ sudo apt-get remove docker docker-engine docker.io containerd runc
+
+         Tudo bem se o apt-get relatar que nenhum desses pacotes está instalado.
+
+         O conteúdo de /var/lib/docker/, incluindo imagens, contêineres, volumes e redes, é preservado. Se você não precisar salvar seus dados existentes e quiser começar com uma instalação limpa, consulte a seção de desinstalação do Docker Engine na parte inferior desta página.
+
+Drivers de armazenamento suportados
+-----------------------------------
+    O Docker Engine no Ubuntu oferece suporte a drivers de armazenamento overlay2, aufs e btrfs.
+
+    O Docker Engine usa o driver de armazenamento overlay2 por padrão. Se você precisar usar o aufs, será necessário configurá-lo manualmente. Consulte usar o driver de armazenamento AUFS.
+
+
+Instalação usuando o repositório
+--------------------------------
+    1. $ sudo apt-get update
+
+    2. $ sudo apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+Adicione a chave GPG oficial do Docker:
+---------------------------------------
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+Use o seguinte comando para configurar o repositório estável. Para adicionar o repositório nightly ou test, adicione a palavra nightly ou test (ou ambos) após a palavra stable nos comandos abaixo. Aprenda sobre canais noturnos e de teste.
+
+    Nota: O subcomando lsb_release -cs abaixo retorna o nome da sua distribuição Ubuntu, como xenial. Às vezes, em uma distribuição como o Linux Mint, você pode precisar alterar $ (lsb_release -cs) para sua distribuição pai do Ubuntu. Por exemplo, se você estiver usando o Linux Mint Tessa, poderá usar o biônico. O Docker não oferece nenhuma garantia em distribuições Ubuntu não testadas e sem suporte.
+
+    $ echo \
+    "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+Instalando Engine Docker
+------------------------
+    Atualize o índice do pacote apt e instale a versão mais recente do Docker Engine e containerd ou vá para a próxima etapa para instalar uma versão específica:
+
+        1. $ sudo apt-get update
+        2. $ sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+    Se você tiver vários repositórios Docker habilitados, instalar ou atualizar sem especificar uma versão no comando apt-get install ou apt-get update sempre instala a versão mais atualizada possível, que pode não ser apropriada para suas necessidades de estabilidade.
+
+ou
+
+Você pode executar o script com a opção DRY_RUN=1 para saber quais etapas o script executará durante a instalação:
+------------------------------------------------------------------------------------------------------------------
+    1. $ curl -fsSL https://get.docker.com -o get-docker.sh
+    2. $ DRY_RUN=1 sh ./get-docker.sh
+
+Este exemplo baixa o script de get.docker.com e o executa para instalar a versão estável mais recente do Docker no Linux:
+-------------------------------------------------------------------------------------------------------------------------
+    $ curl -fsSL https://get.docker.com -o get-docker.sh
+    $ sudo sh get-docker.sh
+
+    Docker está instalado. O serviço docker é iniciado automaticamente em distribuições baseadas em Debian. Em distribuições baseadas em RPM, como CentOS ou Fedora, você precisa iniciá-lo manualmente usando o systemctl ou comando de serviço apropriado. Como a mensagem indica, os usuários não root não podem executar comandos do Docker por padrão.
+
+Usar o Docker como um usuário sem privilégios ou instalar no modo não root?
+---------------------------------------------------------------------------
+    O script de instalação requer privilégios de root ou sudo para instalar e usar o Docker. Se você deseja conceder a usuários não root acesso ao Docker, consulte as etapas de pós-instalação do Linux. O Docker também pode ser instalado sem privilégios de root ou configurado para ser executado no modo não root. Para obter instruções sobre como executar o Docker no modo sem raiz, consulte executar o daemon do Docker como um usuário não raiz (modo não root).
+
+Desintando Docker Engine
+-------------------------
+    Desinstale os pacotes Docker Engine, CLI e Containerd:
+
+        $ sudo apt-get purge docker-ce docker-ce-cli containerd.io
+
+    Imagens, contêineres, volumes ou arquivos de configuração customizados em seu host não são removidos automaticamente. Para excluir todas as imagens, contêineres e volumes:
+
+        $ sudo rm -rf /var/lib/docker
+        $ sudo rm -rf /var/lib/containerd
+
+Etapas de pós-instalação para Linux
+------------------------------------
+    O daemon Docker se conecta a um soquete Unix em vez de uma porta TCP. Por padrão, o soquete Unix pertence ao usuário root e outros usuários só podem acessá-lo usando sudo. O daemon do Docker sempre é executado como o usuário root.
+
+    Se você não quiser prefixar o comando docker com sudo, crie um grupo Unix chamado docker e adicione usuários a ele. Quando o Docker daemon é iniciado, ele cria um soquete Unix acessível por membros do grupo docker.
+
+    1. Crie o grupo docker
+        $ sudo groupadd docker
+
+    2. Adicione seu usuário ao grupo docker.
+        $ sudo usermod -aG docker $USER
+
+    Para corrigir esse problema, remova o diretório ~ /.docker/ (ele é recriado automaticamente, mas todas as configurações personalizadas são perdidas) ou altere sua propriedade e permissões usando os seguintes comandos:
+
+        sudo chown "$USER":"$USER" /home/"$USER"/.docker -R
+        sudo chmod g+rwx "$HOME/.docker" -R
+
+    Configure o Docker para iniciar na inicialização
+        $ sudo systemctl enable docker.service
+        $ sudo systemctl enable containerd.service
+
+Verifique se o Docker Engine está instalado corretamente executando a imagem hello-world.
+-----------------------------------------------------------------------------------------
+    $ sudo docker run hello-world
+
+
+Baixar e executar Jenkins no Docker
+-----------------------------------
+    A imagem Docker recomendada para usar é a imagem jenkins/jenkins oficial (do repositório Docker Hub). Esta imagem contém a versão atual do Long-Term Support (LTS) do Jenkins (que está pronta para produção). No entanto, esta imagem não tem docker CLI dentro dela e não vem com plug-ins e recursos do Blue Ocean usados com frequência. Isso significa que, se você deseja usar todo o poder do Jenkins e do Docker, convém seguir o processo de instalação descrito a seguir.
+
+        Uma nova imagem jenkins/jenkins é publicada sempre que uma nova versão do Jenkins Docker é publicada. Você pode ver uma lista de versões publicadas anteriormente da imagem jenkins/jenkins na página de tags.
+
+No macOS e Linux
+-----------------
+    1. Abra uma janela de terminal.
+
+    2. Crie uma rede de ponte no Docker usando o seguinte comando docker network create:
+
+        $ docker network create jenkins
+
+    3. Para executar comandos do Docker dentro dos nós do Jenkins, baixe e execute o docker:dind Docker image usando o seguinte comando docker run:
+
+    docker run \
+        --name jenkins-docker \ (1)
+        --rm \ (2)
+        --detach \ (3)
+        --privileged \ (4)
+        --network jenkins \ (5)
+        --network-alias docker \ (6)
+        --env DOCKER_TLS_CERTDIR=/certs \ (7)
+        --volume jenkins-docker-certs:/certs/client \ (8)
+        --volume jenkins-data:/var/jenkins_home \ (9)
+        --publish 2376:2376 \ (10)
+        docker:dind \ (11)
+        --storage-driver overlay2 (12)
+
+            1. (Opcional) Especifica o nome do contêiner do Docker a ser usado para executar a imagem. Por padrão, o Docker gerará um nome exclusivo para o contêiner.
+
+            2. (Opcional) Remove automaticamente o contêiner do Docker (a instância da imagem do Docker) quando ele é encerrado.
+
+            3. (Opcional) Executa o contêiner do Docker em segundo plano. Esta instância pode ser interrompida posteriormente executando docker stop jenkins-docker.
+
+            4. A execução do Docker no Docker atualmente requer acesso privilegiado para funcionar corretamente. Este requisito pode ser relaxado com as versões mais recentes do kernel Linux.
+
+            5. Isso corresponde à rede criada na etapa anterior.
+
+            6. Makes the Docker in Docker container available as the hostname docker within the jenkins network.
+
+            7. Habilita o uso de TLS no servidor Docker. Devido ao uso de um contêiner privilegiado, isso é recomendado, embora exija o uso do volume compartilhado descrito abaixo. Esta variável de ambiente controla o diretório raiz onde os certificados Docker TLS são gerenciados.
+
+            8. Mapeia o diretório /certs/client dentro do contêiner para um volume Docker denominado jenkins-docker-certs, conforme criado acima.
+
+            9. Mapeia o diretório /var/jenkins_home dentro do contêiner para o volume do Docker denominado jenkins-data. Isso permitirá que outros contêineres do Docker controlados pelo daemon do Docker desse contêiner montem dados do Jenkins.
+
+            10. (Opcional) Expõe a porta daemon do Docker na máquina host. Isso é útil para executar comandos docker na máquina host para controlar este daemon interno do Docker.
+
+            11. A docker:dind a própria imagem. Esta imagem pode ser baixada antes da execução usando o comando: $(docker image pull docker:dind).
+
+            12. O driver de armazenamento para o volume do Docker. Consulte "Drivers de armazenamento do Docker" para as opções compatíveis.
+
+                Observação: se copiar e colar o snippet de comando acima não funcionar, tente copiar e colar esta versão sem anotações aqui:
+
+                    docker run --name jenkins-docker --rm --detach \
+                    --privileged --network jenkins --network-alias docker \
+                    --env DOCKER_TLS_CERTDIR=/certs \
+                    --volume jenkins-docker-certs:/certs/client \
+                    --volume jenkins-data:/var/jenkins_home \
+                    --publish 2376:2376 docker:dind --storage-driver overlay2
+
+    4. Personalize a imagem oficial do Jenkins Docker, executando as duas etapas abaixo:
+
+        a) Crie Dockerfile com o seguinte conteúdo:
+
+            FROM jenkins/jenkins:2.289.2-lts-jdk11
+            USER root
+            RUN apt-get update && apt-get install -y apt-transport-https \
+            ca-certificates curl gnupg2 \
+            software-properties-common
+            RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+            RUN apt-key fingerprint 0EBFCD88
+            RUN add-apt-repository \
+            "deb [arch=amd64] https://download.docker.com/linux/debian \
+            $(lsb_release -cs) stable"
+            RUN apt-get update && apt-get install -y docker-ce-cli
+            USER jenkins
+            RUN jenkins-plugin-cli --plugins "blueocean:1.24.7 docker-workflow:1.26"
+
+        b) Crie uma nova imagem do docker a partir desse Dockerfile e atribua à imagem um nome significativo, por exemplo, "myjenkins-blueocean:1.1":
+
+            $ docker build -t myjenkins-blueocean:1.1 .
+
+            Lembre-se de que o processo descrito acima fará o download automático da imagem oficial do Jenkins Docker, caso isso não tenha sido feito antes.
+
+    5. Execute sua própria imagem myjenkins-blueocean: 1.1 como um contêiner no Docker usando o seguinte comando docker run:
+
+        docker run \
+        --name jenkins-blueocean \ (1)
+        --rm \ (2)
+        --detach \ (3)
+        --network jenkins \ (4)
+        --env DOCKER_HOST=tcp://docker:2376 \ (5)
+        --env DOCKER_CERT_PATH=/certs/client \
+        --env DOCKER_TLS_VERIFY=1 \
+        --publish 8080:8080 \ (6)
+        --publish 50000:50000 \ (7)
+        --volume jenkins-data:/var/jenkins_home \ (8)
+        --volume jenkins-docker-certs:/certs/client:ro \ (9)
+        myjenkins-blueocean:1.1 (10)
+
+            1. (Opcional) Especifica o nome do contêiner do Docker para esta instância da imagem do Docker.
+
+            2. (Opcional) Remove automaticamente o contêiner do Docker quando ele é encerrado.
+
+            3. (Opcional) Executa o contêiner atual em segundo plano (ou seja, modo "desanexado") e gera o ID do contêiner. Se você não especificar essa opção, o log do Docker em execução para este contêiner será exibido na janela do terminal.
+
+            4. Conecta esse contêiner à rede jenkins definida na etapa anterior. Isso torna o daemon do Docker da etapa anterior disponível para este contêiner Jenkins por meio do docker do nome do host.
+
+            5. Especifica as variáveis de ambiente usadas por docker, docker-compose e outras ferramentas Docker para se conectar ao Docker daemon da etapa anterior.
+
+            6. Mapeia (ou seja, "publica") a porta 8080 do contêiner atual para a porta 8080 na máquina host. O primeiro número representa a porta no host, enquanto o último representa a porta do contêiner. Portanto, se você especificou -p 49000: 8080 para esta opção, estaria acessando o Jenkins em sua máquina host por meio da porta 49000.
+
+            7. Mapeia o diretório /var/jenkins_home no contêiner para o volume do Docker com o nome jenkins-data. Em vez de mapear o diretório /var/jenkins_home para um volume do Docker, você também pode mapear esse diretório para um no sistema de arquivos local de sua máquina. Por exemplo, especificando a opção
+            --volume $ HOME / jenkins: /var/jenkins_home mapearia o diretório /var/jenkins_home do contêiner para o subdiretório jenkins dentro do diretório $ HOME em sua máquina local, que normalmente seria /Users/<your-username>/jenkins ou /home/<seu nome de usuário>/jenkins. Observe que se você alterar o volume ou diretório de origem para isso, o volume do contêiner docker:dind acima precisa ser atualizado para corresponder a isso.
+
+            8. (Opcional) Mapeia a porta 50000 do contêiner atual para a porta 50000 na máquina host. Isso só é necessário se você configurou um ou mais agentes Jenkins de entrada em outras máquinas, que por sua vez interagem com seu contêiner jenkins-blueocean (o "controlador" Jenkins). Os agentes Jenkins de entrada se comunicam com o controlador Jenkins por meio da porta TCP 50000 por padrão. Você pode alterar este número de porta em seu controlador Jenkins por meio da página Configurar Segurança Global. Se você alterasse a porta TCP para agentes Jenkins de entrada de seu controlador Jenkins para 51000 (por exemplo), seria necessário executar novamente o Jenkins (por meio deste comando docker run…) e especificar esta opção "publicar" com algo como --publish 52000: 51000, onde o último valor corresponde a este valor alterado no controlador Jenkins e o primeiro valor é o número da porta na máquina que hospeda o controlador Jenkins. Os agentes Jenkins de entrada se comunicam com o controlador Jenkins nessa porta (52000 neste exemplo). Observe que os agentes WebSocket não precisam dessa configuração.
+
+            9. Mapeia o diretório / certs / client para o volume jenkins-docker-certs criado anteriormente. Isso torna os certificados TLS do cliente necessários para se conectar ao daemon Docker disponíveis no caminho especificado pela variável de ambiente DOCKER_CERT_PATH.
+
+            10. O nome da imagem Docker, que você construiu na etapa anterior.
+
+            Observação: se copiar e colar o snippet de comando acima não funcionar, tente copiar e colar esta versão sem anotações aqui:
+
+            docker run --name jenkins-blueocean --rm --detach \
+            --network jenkins --env DOCKER_HOST=tcp://docker:2376 \
+            --env DOCKER_CERT_PATH=/certs/client --env DOCKER_TLS_VERIFY=1 \
+            --publish 8080:8080 --publish 50000:50000 \
+            --volume jenkins-data:/var/jenkins_home \
+            --volume jenkins-docker-certs:/certs/client:ro \
+            myjenkins-blueocean:1.1
+
+            ou
+
+            docker run --name jenkins --rm --detach --network jenkins --env DOCKER_HOST=tcp://docker:2376 --env DOCKER_CERT_PATH=/home/CONTAINERs/jenkins_home/certs/client --env DOCKER_TLS_VERIFY=1 --publish 8080:8080 --publish 50000:50000 --volume jenkins-data:/home/CONTAINERs/jenkins_home --volume jenkins-docker-certs:/home/CONTAINERs/jenkins_home/certs/client:ro jenkins:1.1
+            
+            Java em Docker
+            https://imasters.com.br/back-end/java-em-docker
+
+Acessando o contêiner Docker
+-----------------------------
+    Se você tem alguma experiência com o Docker e deseja ou precisa acessar seu contêiner do Docker por meio de um terminal/prompt de comando usando o comando docker exec, você pode adicionar uma opção como --name jenkins-tutorial ao comando docker exec. Isso acessará o contêiner do Jenkins Docker denominado "jenkins-tutorial".
+
+    Isso significa que você pode acessar seu contêiner do docker (por meio de uma janela separada de terminal/prompt de comando) com um comando docker exec como:
+
+        $ docker exec -it jenkins-blueocean bash
+
+Acessando o logs Docker
+-----------------------
+    É possível que você precise acessar o log do console do Jenkins, por exemplo, ao desbloquear o Jenkins como parte do assistente de configuração pós-instalação.
+
+    O log do console do Jenkins pode ser acessado facilmente por meio da janela do terminal/prompt de comando a partir da qual você executou o comando docker run…. Caso seja necessário, você também pode acessar o registro do console do Jenkins por meio dos registros do Docker do seu contêiner usando o seguinte comando:
+
+        docker logs <docker-container-name>
+
+        Seu <docker-container-name> pode ser obtido usando o comando docker ps.
+
+Acessando o diretório inicial do Jenkins
+----------------------------------------
+    É possível que você precise acessar o diretório inicial do Jenkins, por exemplo, para verificar os detalhes de um build do Jenkins no subdiretório do workspace.
+
+    Se você mapeou o diretório inicial do Jenkins (/var/jenkins_home) para um no sistema de arquivos local da sua máquina (ou seja, no docker run… comando acima), você pode acessar o conteúdo deste diretório através do terminal/prompt de comando usual da sua máquina.
+
+    Caso contrário, se você especificou a opção --volume jenkins-data: /var/jenkins_home no comando docker run…, poderá acessar o conteúdo do diretório inicial do Jenkins por meio do terminal/prompt de comando do contêiner usando o comando docker container exec:
+
+        docker container exec -it <docker-container-name> bash
+
+    Conforme mencionado acima, seu <docker-container-name> pode ser obtido usando o comando docker container ls. Se você especificou a opção --name jenkins-blueocean no comando docker container run… acima (consulte também Acessando o container Jenkins/Blue Ocean Docker), você pode simplesmente usar o comando docker container exec:
+   
+        docker container exec -it jenkins-blueocean bash
+
+
+Assistente de configuração pós-instalação
+-----------------------------------------
+    Depois de baixar, instalar e executar o Jenkins usando um dos procedimentos acima, o assistente de configuração pós-instalação é iniciado.
+
+    Este assistente de configuração o conduz por algumas etapas rápidas "únicas" para desbloquear o Jenkins, personalizá-lo com plug-ins e criar o primeiro usuário administrador por meio do qual você pode continuar acessando o Jenkins.
+
+Desbloqueando Jenkins
+---------------------
+    Ao acessar pela primeira vez uma nova instância do Jenkins, você será solicitado a desbloqueá-la usando uma senha gerada automaticamente.
+
+        1. Navegue até http://localhost:8080 (ou qualquer porta que você configurou para Jenkins ao instalá-lo) e espere até que a página Desbloquear Jenkins apareça.
+
+        2. Na saída de log do console do Jenkins, copie a senha alfanumérica gerada automaticamente (entre os 2 conjuntos de asteriscos).
+
+            O comando: sudo cat /var/lib/jenkins/secrets/initialAdminPassword imprimirá a senha no console.
+
+            Se você estiver executando o Jenkins no Docker usando a imagem jenkins/jenkins oficial, poderá usar sudo docker exec $ {CONTAINER_ID ou CONTAINER_NAME} cat /var/jenkins_home/secrets/initialAdminPassword para imprimir a senha no console sem ter que executar no contêiner.
+
+        3. Na página Desbloquear Jenkins, cole essa senha no campo Senha do administrador e clique em Continuar.
+
+            Observação: Você sempre pode acessar o log do console do Jenkins a partir dos logs do Docker (acima).
+
+            O log do console do Jenkins indica o local (no diretório inicial do Jenkins) onde essa senha também pode ser obtida. Essa senha deve ser inserida no assistente de configuração em novas instalações do Jenkins antes que você possa acessar a IU principal do Jenkins. Essa senha também serve como a senha da conta do administrador padrão (com o nome de usuário "admin") se você pular a etapa de criação do usuário subsequente no assistente de configuração.
+
+
+Personalização do Jenkins com plug-ins           
+--------------------------------------
+    Depois de desbloquear o Jenkins, a página Personalizar Jenkins é exibida. Aqui você pode instalar qualquer número de plug-ins úteis como parte de sua configuração inicial.
+
+    Clique em uma das duas opções mostradas:
+    ----------------------------------------
+
+        Instale os plug-ins sugeridos - para instalar o conjunto recomendado de plug-ins, que são baseados nos casos de uso mais comuns.
+
+        Selecione plug-ins para instalar - para escolher qual conjunto de plug-ins instalar inicialmente. Quando você acessa pela primeira vez a página de seleção de plug-ins, os plug-ins sugeridos são selecionados por padrão.
+
+        Se você não tiver certeza de quais plug-ins precisa, escolha Instalar os plug-ins sugeridos. Você pode instalar (ou remover) plug-ins adicionais do Jenkins posteriormente por meio da página Gerenciar Jenkins> Gerenciar plug-ins no Jenkins.
+
+        O assistente de configuração mostra a progressão do Jenkins sendo configurado e o conjunto escolhido de plug-ins do Jenkins sendo instalado. Este processo pode demorar alguns minutos.
+
+    Criação do primeiro usuário administrador
+    -----------------------------------------
+        Finalmente, após personalizar o Jenkins com plug-ins, o Jenkins pede que você crie seu primeiro usuário administrador.
+
+            1. Quando a página Criar Primeiro Usuário Admin for exibida, especifique os detalhes do usuário administrador nos respectivos campos e clique em Salvar e Concluir.
+
+            2. Quando a página Jenkins está pronto aparecer, clique em Começar a usar Jenkins.
+
+            Notas:
+            ------
+                Esta página pode indicar que o Jenkins está quase pronto! em vez disso, clique em Reiniciar.
+
+                Se necessário, faça login no Jenkins com as credenciais do usuário que você acabou de criar e você está pronto para começar a usar o Jenkins!
+
+Fonte:
+    https://docs.docker.com/engine/install/ubuntu/
+    https://docs.docker.com/engine/install/linux-postinstall/

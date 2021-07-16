@@ -1,0 +1,43 @@
+
+Introdução ao Pipeline
+======================
+
+    Conforme mencionado anteriormente, Jenkins Pipeline é um conjunto de plug-ins que oferece suporte à implementação e integração de pipeline de entrega contínua ao Jenkins. O Pipeline fornece um conjunto extensível de ferramentas para modelar pipelines de entrega simples a complexos "como código" por meio do Pipeline DSL.
+
+    Esta seção descreve como começar a criar seu projeto Pipeline no Jenkins e apresenta as várias maneiras como um arquivo jenkins pode ser criado e armazenado.
+
+Pré requisitos
+==============
+
+    Para usar o Jenkins Pipeline, você precisará
+
+        Jenkins 2.x ou posterior (versões anteriores a 1.642.3 podem funcionar, mas não são recomendadas)
+
+        Plug-in do pipeline que é instalado como parte dos "plug-ins sugeridos" (especificados ao executar o assistente de configuração pós-instalação após instalar o Jenkins).
+
+Criando um Pipeline
+===================
+
+    Tanto declarativa quanto com script são DSLs para descrever partes do pipeline de entrega de software. O Pipeline com script é escrito em uma forma limitada de sintaxe Groovy.
+
+    Os componentes relevantes da sintaxe do Groovy serão introduzidos conforme necessário ao longo desta documentação, portanto, embora um entendimento do Groovy seja útil, não é necessário trabalhar com o Pipeline.
+
+    Um pipeline pode ser criado de uma das seguintes maneiras:
+
+        - Por meio do Blue Ocean - depois de configurar um projeto de Pipeline no Blue Ocean, a UI do Blue Ocean o ajuda a escrever o arquivo jenkins do seu Pipeline e confirmá-lo no controle de versão.
+
+        - Por meio da IU clássica - você pode inserir um Pipeline básico diretamente no Jenkins por meio da IU clássica.
+
+        - No SCM - você pode escrever um arquivo jenkins manualmente, que pode enviar para o repositório de controle de código-fonte do seu projeto.
+
+    A sintaxe para definir um Pipeline com qualquer abordagem é a mesma, mas embora o Jenkins ofereça suporte à entrada de Pipeline diretamente na IU clássica, geralmente é considerada a prática recomendada definir o Pipeline em um arquivo jenkins que o Jenkins carregará diretamente do controle de origem.
+
+
+Pela Blue Ocean
+================
+
+    Se você é novo no Jenkins Pipeline, a IU do Blue Ocean ajuda a configurar seu projeto Pipeline, cria e grava automaticamente seu Pipeline (ou seja, o arquivo jenkins) para você por meio do editor gráfico de Pipeline.
+
+    Como parte da configuração do seu projeto Pipeline no Blue Ocean, o Jenkins configura uma conexão segura e devidamente autenticada com o repositório de controle de versão do projeto. Portanto, todas as alterações feitas no jenkinsfile por meio do editor Pipeline do Blue Ocean são salvas automaticamente e confirmadas no controle de versão.
+
+    Fonte: https://www.jenkins.io/doc/book/pipeline/getting-started/
